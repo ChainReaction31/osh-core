@@ -194,6 +194,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
     @Override
     public void start() throws SensorHubException
     {
+        System.out.println("*****\n Module STA Should be starting. \n *****");
         connection.updateConfig(config.connection);
         connection.waitForConnection();
         reportStatus("Connected to " + getStaEndpointUrl());
@@ -304,7 +305,8 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
         
         // add stream info to map
         StreamInfo streamInfo = new StreamInfo();
-        streamInfo.datastreamID = 12; //hard coded datastream ID;
+//        streamInfo.datastreamID = 12; //hard coded datastream ID;
+        streamInfo.datastreamID = config.staOptionsConfig.dsID;
         streamInfo.measPeriodMs = (int)(sensorOutput.getAverageSamplingPeriod()*1000);
         dataStreams.put(sensorOutput, streamInfo);
         
@@ -426,6 +428,12 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
      */
     private void send(final SensorDataEvent e, final StreamInfo streamInfo)
     {
+    	System.out.println(e.getRecordDescription().toString());
+    	
+    	if(e.getSource().getName().contains("Street Closure")) {
+    		System.out.println("Is a Street Closure Event");
+    		
+    	}
         // create send request task
         Runnable sendTask = new Runnable() {
             @Override
@@ -433,37 +441,182 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
             {
                 try
                 {
-                    for (DataBlock data: e.getRecords())
-                    {
-                        String obsCollectionUrl = staEndpointUrl + "/Observations";
-                        HttpURLConnection cnx = (HttpURLConnection) new URL(staEndpointUrl).openConnection();
-                        cnx.setDoOutput(true);
-                        cnx.setRequestMethod("POST");
-                        cnx.setRequestProperty("Content-Type", "application/json");
-                        cnx.connect();
+                    String obsCollectionUrl = staEndpointUrl + "/Observations";
+                    HttpURLConnection cnx = (HttpURLConnection) new URL(staEndpointUrl).openConnection();
+                    cnx.setDoOutput(true);
+                    cnx.setRequestMethod("POST");
+                    cnx.setRequestProperty("Content-Type", "application/json");
+                    cnx.connect();
 
-                        try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))) {
-                            // This is where you put your custom code to serialize as JSON and
-                            // send it in the POST request body
+                    try(JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))){
+                        // This is where you put your custom code to serialize as JSON and
+                        // send it in the POST request body
+                        jsonWriter.beginObject();
 
-                            jsonWriter.beginObject();
+                        // I think we may be able to use a single DataStream in this nonstandard approach for SCIRA...
+//                        jsonWriter.name("MultiDatastream").beginObject()
+//                                .name("@iot.id")
+//                                .value(streamInfo.datastreamID)
+//                                .endObject();
+                        jsonWriter.name("Datastream").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
+                        //jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
 
-                            jsonWriter.name("MultiDatastream").beginObject()
-                                    .name("@iot.id")
-                                    .value(streamInfo.datastreamID)
-                                    .endObject();
+                        // Get Time Record from event data
+                        DataBlock timeData = e.getRecords()[0];
+                        jsonWriter.name("phenomenonTime").value(timeData.getStringValue());
+//                        jsonWriter.name("phenomenonTime").value("isodate");
+                        jsonWriter.name("resultTime").value(timeData.getStringValue());
+//                        jsonWriter.name("resultTime").value("Same as phenomenonTime");
 
-                            jsonWriter.name("phenomenonTime").value("isodate");
-                            jsonWriter.name("resultTime").value("same as phenomenonTime");
-                            jsonWriter.name("result").beginArray()
-                                    .value(data.getDoubleValue(0))
-                                    .value(data.getStringValue(1))
-                                    .value(data.getIntValue(2))
+                        // Result should be the only variance among the different Report Types
+                        jsonWriter.name("result").beginObject();
+                        jsonWriter.name("id").value(e.getRecords()[1].getStringValue());
+                        jsonWriter.name("timestamp").value(e.getRecords()[0].getStringValue());
+                        if(e.getSource().getName().contains("Street Closure")){
+                            jsonWriter.name("observationType").value("streetClosure");
+
+                            jsonWriter.name("params").beginObject();
+                            jsonWriter.name("closureAction").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("closureType").value(e.getRecords()[0].getStringValue());
+
+                            jsonWriter.name("location").beginObject();
+                            jsonWriter.name("type").value("Feature");
+
+                            jsonWriter.name("geometry").beginObject();
+                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("coordinates").beginArray()
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[0].getDoubleValue())
                                     .endArray();
+                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("properties").beginObject();
+                            jsonWriter.name("radius_units").value("ft");
+                            jsonWriter.endObject().endObject().endObject();
+                            // End Params
+                            jsonWriter.name("encodingType").value("application/vnd.geo+json");
+                        }//else if(e.getSource().getName().contains("Aid")){
+                            /*jsonWriter.name("observationType").value("aid");
 
-                            jsonWriter.endObject();
+                            jsonWriter.name("params").beginObject();
+                            jsonWriter.name("closureAction").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("closureType").value(e.getRecords()[0].getStringValue());
+
+                            jsonWriter.name("location").beginObject();
+                            jsonWriter.name("type").value("Feature");
+
+                            jsonWriter.name("geometry").beginObject();
+                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("coordinates").beginArray()
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .endArray();
+                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("properties").beginObject();
+                            jsonWriter.name("radius_units").value("ft");
+                            jsonWriter.endObject().endObject().endObject();
+                            // End Params
+                            jsonWriter.name("encodingType").value("application/vnd.geo+json");*/
+                        //}
+                        else if(e.getSource().getName().contains("Flooding")){
+                            jsonWriter.name("observationType").value("flood");
+
+                            jsonWriter.name("params").beginObject();
+                            jsonWriter.name("featureType").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("obsMode").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("obsDepth").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("obsTime").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("validTime").value(e.getRecords()[0].getStringValue());
+
+                            jsonWriter.name("location").beginObject();
+                            jsonWriter.name("type").value("Feature");
+
+                            jsonWriter.name("geometry").beginObject();
+                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("coordinates").beginArray()
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .endArray();
+                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("properties").beginObject();
+                            jsonWriter.name("radius_units").value("ft");
+                            jsonWriter.endObject().endObject().endObject();
+                            // End Params
+                            jsonWriter.name("encodingType").value("application/vnd.geo+json");
                         }
+                        else if(e.getSource().getName().contains("Medical")){
+                            jsonWriter.name("observationType").value("med");
+
+                            jsonWriter.name("params").beginObject();
+                            jsonWriter.name("medType").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("action").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("medSign").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("value").value(e.getRecords()[0].getStringValue());
+
+                            jsonWriter.name("location").beginObject();
+                            jsonWriter.name("type").value("Feature");
+
+                            jsonWriter.name("geometry").beginObject();
+                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("coordinates").beginArray()
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .endArray();
+                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("properties").beginObject();
+                            jsonWriter.name("radius_units").value("ft");
+                            jsonWriter.endObject().endObject().endObject();
+                            // End Params
+                            jsonWriter.name("encodingType").value("application/vnd.geo+json");
+                        }
+                        else if(e.getSource().getName().contains("Tracking")){
+                            jsonWriter.name("observationType");
+
+                            jsonWriter.name("params").beginObject();
+                            jsonWriter.name("assetId").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("gpstimestamp").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("trackMethod").value(e.getRecords()[0].getStringValue());
+
+                            jsonWriter.name("location").beginObject();
+                            jsonWriter.name("type").value("Feature");
+
+                            jsonWriter.name("geometry").beginObject();
+                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("coordinates").beginArray()
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .endArray();
+                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("properties").beginObject();
+                            jsonWriter.name("radius_units").value("ft");
+                            jsonWriter.endObject().endObject().endObject();
+                            // End Params
+                            jsonWriter.name("encodingType").value("application/vnd.geo+json");
+                        }
+
+                        jsonWriter.name("observationType");
+                        jsonWriter.name("params").beginObject();
+//                        jsonWriter.name("result").beginArray()
+//                                .value(data.getDoubleValue(0))
+//                                .value(data.getStringValue(1))
+//                                .value(data.getIntValue(2))
+//                                .endArray();
+
+                        jsonWriter.endObject();
                     }
+
+//                    for (DataBlock data: e.getRecords())
+//                    {
+//                        String obsCollectionUrl = staEndpointUrl + "/Observations";
+//                        HttpURLConnection cnx = (HttpURLConnection) new URL(staEndpointUrl).openConnection();
+//                        cnx.setDoOutput(true);
+//                        cnx.setRequestMethod("POST");
+//                        cnx.setRequestProperty("Content-Type", "application/json");
+//                        cnx.connect();
+//
+//                        try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))) {
+//
+//                        }
+//                    }
                 }
                 catch (Exception ex)
                 {

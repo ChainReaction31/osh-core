@@ -55,6 +55,9 @@ public class STAClientConfig extends ClientConfig
     
     @DisplayInfo(label="Connection Options")
     public STAConnectionConfig connection = new STAConnectionConfig();
+
+    @DisplayInfo(label = "STA Options")
+    public STAOptionsConfig staOptionsConfig = new STAOptionsConfig();
     
     
     public static class STAConnectionConfig extends RobustIPConnectionConfig
@@ -65,6 +68,32 @@ public class STAClientConfig extends ClientConfig
         
         @DisplayInfo(desc="Maximum number of stream errors before we try to reconnect to remote server")
         public int maxConnectErrors = 10;
+    }
+
+    public static class STAOptionsConfig
+    {
+        @DisplayInfo(label="Sensor ID", desc = "Numerical ID of the Sensor")
+        public int sensorID = 0;
+
+        @DisplayInfo(label="DataStream ID", desc = "Numerical ID of the DataStream")
+        public int dsID = 0;
+
+
+//        @DisplayInfo(label="Street Closure DataStream ID", desc = "Numerical ID of the DataStream")
+//        public int street_dsID = 0;
+//
+//        @DisplayInfo(label="Flooding DataStream ID", desc = "Numerical ID of the DataStream")
+//        public int flooding_dsID = 0;
+//
+//        @DisplayInfo(label="Medical DataStream ID", desc = "Numerical ID of the DataStream")
+//        public int medical_dsID = 0;
+//
+//        @DisplayInfo(label="Aid DataStream ID", desc = "Numerical ID of the DataStream")
+//        public int aid_dsID = 0;
+//
+//        @DisplayInfo(label="Track DataStream ID", desc = "Numerical ID of the DataStream")
+//        public int track_dsID = 0;
+
     }
     
     
