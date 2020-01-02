@@ -448,7 +448,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                     cnx.setRequestProperty("Content-Type", "application/json");
                     cnx.connect();
 
-                    try(JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))){
+                    try(JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))) {
                         // This is where you put your custom code to serialize as JSON and
                         // send it in the POST request body
                         jsonWriter.beginObject();
@@ -472,23 +472,24 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                         jsonWriter.name("result").beginObject();
                         jsonWriter.name("id").value(e.getRecords()[1].getStringValue());
                         jsonWriter.name("timestamp").value(e.getRecords()[0].getStringValue());
-                        if(e.getSource().getName().contains("Street Closure")){
+
+                        if (e.getSource().getName().contains("Street Closure")) {
                             jsonWriter.name("observationType").value("streetClosure");
 
                             jsonWriter.name("params").beginObject();
-                            jsonWriter.name("closureAction").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("closureType").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("closureAction").value(e.getRecords()[7].getStringValue());
+                            jsonWriter.name("closureType").value(e.getRecords()[6].getStringValue());
 
                             jsonWriter.name("location").beginObject();
                             jsonWriter.name("type").value("Feature");
 
                             jsonWriter.name("geometry").beginObject();
-                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("type").value("Circle");  // Always Circle in App right now
                             jsonWriter.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[2].getDoubleValue())
+                                    .value(e.getRecords()[3].getDoubleValue())
                                     .endArray();
-                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("radius").value(e.getRecords()[5].getDoubleValue());
                             jsonWriter.name("properties").beginObject();
                             jsonWriter.name("radius_units").value("ft");
                             jsonWriter.endObject().endObject().endObject();
@@ -517,13 +518,13 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             // End Params
                             jsonWriter.name("encodingType").value("application/vnd.geo+json");*/
                         //}
-                        else if(e.getSource().getName().contains("Flooding")){
+                        else if (e.getSource().getName().contains("Flooding")) {
                             jsonWriter.name("observationType").value("flood");
 
                             jsonWriter.name("params").beginObject();
-                            jsonWriter.name("featureType").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("obsMode").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("obsDepth").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("featureType").value(e.getRecords()[6].getStringValue());
+                            jsonWriter.name("obsMode").value(e.getRecords()[8].getStringValue());
+                            jsonWriter.name("obsDepth").value(e.getRecords()[7].getStringValue());
                             jsonWriter.name("obsTime").value(e.getRecords()[0].getStringValue());
                             jsonWriter.name("validTime").value(e.getRecords()[0].getStringValue());
 
@@ -531,26 +532,25 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             jsonWriter.name("type").value("Feature");
 
                             jsonWriter.name("geometry").beginObject();
-                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("type").value("Circle");
                             jsonWriter.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[2].getDoubleValue())
+                                    .value(e.getRecords()[3].getDoubleValue())
                                     .endArray();
-                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("radius").value(e.getRecords()[5].getDoubleValue());
                             jsonWriter.name("properties").beginObject();
                             jsonWriter.name("radius_units").value("ft");
                             jsonWriter.endObject().endObject().endObject();
                             // End Params
                             jsonWriter.name("encodingType").value("application/vnd.geo+json");
-                        }
-                        else if(e.getSource().getName().contains("Medical")){
+                        } else if (e.getSource().getName().contains("Medical")) {
                             jsonWriter.name("observationType").value("med");
 
                             jsonWriter.name("params").beginObject();
-                            jsonWriter.name("medType").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("action").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("medSign").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("value").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("medType").value(e.getRecords()[6].getStringValue());
+                            jsonWriter.name("action").value("open");    // We don't have any implementation of this in the app yet
+                            jsonWriter.name("medSign").value("heartRate");   // Don't have any implementation yet
+                            jsonWriter.name("value").value(e.getRecords()[7].getStringValue());
 
                             jsonWriter.name("location").beginObject();
                             jsonWriter.name("type").value("Feature");
@@ -558,8 +558,8 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             jsonWriter.name("geometry").beginObject();
                             jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
                             jsonWriter.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[2].getDoubleValue())
+                                    .value(e.getRecords()[3].getDoubleValue())
                                     .endArray();
                             jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
                             jsonWriter.name("properties").beginObject();
@@ -567,56 +567,33 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             jsonWriter.endObject().endObject().endObject();
                             // End Params
                             jsonWriter.name("encodingType").value("application/vnd.geo+json");
-                        }
-                        else if(e.getSource().getName().contains("Tracking")){
-                            jsonWriter.name("observationType");
+                        } else if (e.getSource().getName().contains("Tracking")) {
+                            jsonWriter.name("observationType").value("track");
+                            jsonWriter.name("confidence").value("90");  // Don't think this value changes in app
 
                             jsonWriter.name("params").beginObject();
-                            jsonWriter.name("assetId").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("assetId").value(e.getRecords()[7].getStringValue());
                             jsonWriter.name("gpstimestamp").value(e.getRecords()[0].getStringValue());
-                            jsonWriter.name("trackMethod").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("trackMethod").value(e.getRecords()[9].getStringValue());
 
                             jsonWriter.name("location").beginObject();
                             jsonWriter.name("type").value("Feature");
 
                             jsonWriter.name("geometry").beginObject();
-                            jsonWriter.name("type").value(e.getRecords()[0].getStringValue());
+                            jsonWriter.name("type").value("Circle");
                             jsonWriter.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .value(e.getRecords()[0].getDoubleValue())
+                                    .value(e.getRecords()[2].getDoubleValue())
+                                    .value(e.getRecords()[3].getDoubleValue())
                                     .endArray();
-                            jsonWriter.name("radius").value(e.getRecords()[0].getDoubleValue());
+                            jsonWriter.name("radius").value(e.getRecords()[5].getDoubleValue());
                             jsonWriter.name("properties").beginObject();
                             jsonWriter.name("radius_units").value("ft");
                             jsonWriter.endObject().endObject().endObject();
                             // End Params
                             jsonWriter.name("encodingType").value("application/vnd.geo+json");
                         }
-
-                        jsonWriter.name("observationType");
-                        jsonWriter.name("params").beginObject();
-//                        jsonWriter.name("result").beginArray()
-//                                .value(data.getDoubleValue(0))
-//                                .value(data.getStringValue(1))
-//                                .value(data.getIntValue(2))
-//                                .endArray();
-
                         jsonWriter.endObject();
                     }
-
-//                    for (DataBlock data: e.getRecords())
-//                    {
-//                        String obsCollectionUrl = staEndpointUrl + "/Observations";
-//                        HttpURLConnection cnx = (HttpURLConnection) new URL(staEndpointUrl).openConnection();
-//                        cnx.setDoOutput(true);
-//                        cnx.setRequestMethod("POST");
-//                        cnx.setRequestProperty("Content-Type", "application/json");
-//                        cnx.connect();
-//
-//                        try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(cnx.getOutputStream()))) {
-//
-//                        }
-//                    }
                 }
                 catch (Exception ex)
                 {
