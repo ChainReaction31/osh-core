@@ -78,6 +78,9 @@ public class STAClientConfig extends ClientConfig
         @DisplayInfo(label="DataStream ID", desc = "Numerical ID of the DataStream")
         public int dsID = 0;
 
+        @DisplayInfo(label="FOI ID", desc = "Numerical ID of the Feature of Interest")
+        public int foiID = 0;
+
 
 //        @DisplayInfo(label="Street Closure DataStream ID", desc = "Numerical ID of the DataStream")
 //        public int street_dsID = 0;
