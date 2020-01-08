@@ -50,7 +50,8 @@ public class STAClientConfig extends ClientConfig
     
     
     @DisplayInfo(label="STA Endpoint", desc="STA endpoint where the requests are sent")
-    public HTTPConfig staEndpoint = new HTTPConfig();
+    public STAHTTPConfig staEndpoint = new STAHTTPConfig();
+//    public HTTPConfig staEndpoint = new HTTPConfig();
     
     
     @DisplayInfo(label="Connection Options")
@@ -97,6 +98,11 @@ public class STAClientConfig extends ClientConfig
 //        @DisplayInfo(label="Track DataStream ID", desc = "Numerical ID of the DataStream")
 //        public int track_dsID = 0;
 
+    }
+
+    public static class STAHTTPConfig extends HTTPConfig{
+        @DisplayInfo(desc="Ignore Port Number")
+        public boolean ignorePort;
     }
     
     

@@ -41,6 +41,8 @@ import org.vast.ows.OWSException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,6 +71,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 
     public class StreamInfo {
         long datastreamID;
+        long foiID;
         public long lastEventTime = Long.MIN_VALUE;
         public int measPeriodMs = 1000;
         public int errorCount = 0;
@@ -105,7 +108,11 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
         String scheme = "http";
         if (config.staEndpoint.enableTLS)
             scheme = "https";
-        staEndpointUrl = scheme + "://" + config.staEndpoint.remoteHost + ":" + config.staEndpoint.remotePort;
+        if(config.staEndpoint.ignorePort){
+            staEndpointUrl = scheme + "://" + config.staEndpoint.remoteHost;
+        }else{
+            staEndpointUrl = scheme + "://" + config.staEndpoint.remoteHost + ":" + config.staEndpoint.remotePort;
+        }
         if (config.staEndpoint.resourcePath != null) {
             if (config.staEndpoint.resourcePath.charAt(0) != '/')
                 staEndpointUrl += '/';
@@ -129,6 +136,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
         this.connection = new RobustIPConnection(this, config.connection, "STA server") {
             public boolean tryConnect() throws IOException {
                 // first check if we can reach remote host on specified port
+                // TODO: Might need to mess with config to set reachability requirements
                 if (!tryConnectTCP(config.staEndpoint.remoteHost, config.staEndpoint.remotePort))
                     return false;
 
@@ -267,6 +275,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
         StreamInfo streamInfo = new StreamInfo();
 //        streamInfo.datastreamID = 12; //hard coded datastream ID;
         streamInfo.datastreamID = config.staOptionsConfig.dsID;
+        streamInfo.foiID = config.staOptionsConfig.foiID;
         streamInfo.measPeriodMs = (int) (sensorOutput.getAverageSamplingPeriod() * 1000);
         dataStreams.put(sensorOutput, streamInfo);
 
@@ -396,19 +405,20 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                                .endObject();
                         System.out.println(streamInfo.datastreamID);
                         jsonWriter.name("Datastream").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
-                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
+                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.foiID).endObject();
 
                         // Get Time Record from event data
-                        jsonWriter.name("phenomenonTime").value(e.getRecords()[0].getStringValue(0));
+                        String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(e.getRecords()[0].getIntValue(0) * 1000L));
+                        //jsonWriter.name("phenomenonTime").value(e.getRecords()[0].getStringValue(0));
 //                        jsonWriter.name("phenomenonTime").value("isodate");
-                        jsonWriter.name("resultTime").value(e.getRecords()[0].getStringValue(0));
+                        jsonWriter.name("resultTime").value(timestamp);
 //                        jsonWriter.name("resultTime").value("Same as phenomenonTime");
 
 
 
 
 
-                        StringWriter stringWriter = new StringWriter();
+                        //StringWriter stringWriter = new StringWriter();
                         //JsonWriter result = new JsonWriter(stringWriter);
 //                        JsonObject result = new JsonObject();
 
@@ -418,10 +428,12 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                        result.name("id").value(e.getRecords()[0].getStringValue(1));
 //                        result.add("id", e.getRecords()[0].getStringValue(1));
 //                        result.name("timestamp").value(e.getRecords()[0].getStringValue(0));
+                        
                         String resultString = "";
                         if (e.getSource().getName().contains("Street Closure")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+//                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"streetclosure\",";
                             String rParams = "\"params\":{";
                             String rpClosureAction = "\"closureAction\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
@@ -490,7 +502,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                     //}
                         else if (e.getSource().getName().contains("Flooding")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"flooding\",";
                             String rParams = "\"params\":{";
                             String rpFeatureType = "\"featureType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
@@ -514,7 +526,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 
                     } else if (e.getSource().getName().contains("Medical")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"med\",";
                             String rParams = "\"params\":{";
                             String rpMedType = "\"medType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
@@ -536,7 +548,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpMedType + rpAction + rpMedSign + rpValue + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
                     } else if (e.getSource().getName().contains("Tracking")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"track\",";
                             String rConfidence = "\"confidence\":\"" + e.getRecords()[0].getStringValue(5) + "\",";
                             String rParams = "\"params\":{";
@@ -562,8 +574,20 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                     jsonWriter.name("result").value(resultString);
                     jsonWriter.endObject();
                 	//jsonWriter.
-                    System.out.println(cnx.getResponseMessage());
+//                    System.out.println(cnx.getResponseMessage());
                 }
+
+                    InputStream is = cnx.getInputStream();
+                    System.out.println("Printing Request---");
+                    InputStreamReader isReader = new InputStreamReader(is);
+                    BufferedReader reader = new BufferedReader(isReader);
+                    StringBuffer sb = new StringBuffer();
+                    String isString;
+                    while((isString = reader.readLine()) != null){
+                        sb.append(isString);
+                    }
+                    System.out.println(sb.toString());
+                    //System.out.println(cnx.getOutputStream().toString());
 
             }
                 catch(Exception ex)
