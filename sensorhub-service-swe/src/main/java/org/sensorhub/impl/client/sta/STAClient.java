@@ -477,7 +477,29 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             // End Params
                             result.name("encodingType").value("application/vnd.geo+json");
                             result.endObject();*/
-                    }//else if(e.getSource().getName().contains("Aid")){
+                    }else if(e.getSource().getName().contains("Aid")){
+                            String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
+                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
+                            String rOBSType = "\"observationType\":\"aid\",";
+                            String rParams = "\"params\":{";
+                            String rpAidType = "\"aidType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
+                            String rpAidPersons = "\"aidPersons\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
+                            String rpUrgency = "\"urgency\":\"" + e.getRecords()[0].getStringValue(8) + "\",";
+                            String rpDescription = "\"description\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
+                            String rpReporter = "\"reporter\":\"" + e.getRecords()[0].getStringValue(10) + "\",";
+                            String rpLocation = "\"location\":{";
+                            String rplType = "\"type\":\"Feature\",";
+                            String rplGeometry = "\"geometry\":{";
+                            String rplgType = "\"type\":\"Circle\",";
+                            String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "],";
+                            String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
+                            String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
+                            String rplgeomEnd = "}";
+                            String rplocEnd = "}";
+                            String rparamsEnd = "},";
+                            String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
+
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAidType + rpAidPersons + rpUrgency + rpDescription + rpReporter + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
                             /*result.name("observationType").value("aid");
 
                             result.name("params").beginObject();
@@ -499,7 +521,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             result.endObject().endObject().endObject().endObject().endObject();
                             // End Params
                             result.name("encodingType").value("application/vnd.geo+json");*/
-                    //}
+                    }
                         else if (e.getSource().getName().contains("Flooding")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
