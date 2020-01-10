@@ -11,13 +11,10 @@
  Copyright (C) 2012-2015 Sensia Software LLC. All Rights Reserved.
  ******************************* END LICENSE BLOCK ***************************/
 
-package org.sensorhub.impl.client.sta;
+package org.sensorhub.impl.client.staflood;
 
-import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
-
 import net.opengis.swe.v20.DataBlock;
-
 import org.sensorhub.api.client.ClientException;
 import org.sensorhub.api.client.IClientModule;
 import org.sensorhub.api.common.Event;
@@ -61,7 +58,7 @@ import java.util.concurrent.TimeUnit;
  * @author Alex Robin <alex.robin@sensiasoftware.com>
  * @since Dec 11, 2019
  */
-public class STAClient extends AbstractModule<STAClientConfig> implements IClientModule<STAClientConfig>, IEventListener {
+public class STAClientFlood extends AbstractModule<STAClientConfig> implements IClientModule<STAClientConfig>, IEventListener {
     RobustConnection connection;
     ISensorModule<?> sensor;
     String staEndpointUrl;
@@ -82,7 +79,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
     }
 
 
-    public STAClient() {
+    public STAClientFlood() {
         this.dataStreams = new LinkedHashMap<>();
     }
 
@@ -379,7 +376,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
      */
     private void send(final SensorDataEvent e, final StreamInfo streamInfo) {
         System.out.println(e.getRecordDescription().toString());
-        DataBlock dataBlock = e.getRecords()[0];
+        //DataBlock dataBlock = e.getRecords()[0];
 
         // create send request task
         Runnable sendTask = new Runnable() {
@@ -404,31 +401,8 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                                .value(streamInfo.datastreamID)
 //                                .endObject();
                         System.out.println(streamInfo.datastreamID);
-                        // TODO: need to change DataStream and FOI based on type of Spot Report
-                        int dataStreamID, foiID;
-                        if (e.getSource().getName().contains("Street Closure")) {
-                            dataStreamID = 232;
-                            foiID = 32;
-                        } else if (e.getSource().getName().contains("Aid")) {
-                            dataStreamID = 235;
-                            foiID = 28;
-                        } else if (e.getSource().getName().contains("Flooding")) {
-                            dataStreamID = 192;
-                            foiID = 21;
-                        }else if (e.getSource().getName().contains("Medical")) {
-                            dataStreamID = 233;
-                            foiID = 33;
-                        }if (e.getSource().getName().contains("Track")) {
-                            dataStreamID = 233;
-                            foiID = 33;
-                        }else{
-                            dataStreamID = 233;
-                            foiID = 33;
-                        }
-                        jsonWriter.name("Datastream").beginObject().name("@iot.id").value(dataStreamID).endObject();
-                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(foiID).endObject();
-//                        jsonWriter.name("Datastream").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
-//                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.foiID).endObject();
+                        jsonWriter.name("Datastream").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
+                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.foiID).endObject();
 
                         // Get Time Record from event data
                         String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(e.getRecords()[0].getIntValue(0) * 1000L));
@@ -453,114 +427,23 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                        result.name("timestamp").value(e.getRecords()[0].getStringValue(0));
                         
                         String resultString = "";
-                        if (e.getSource().getName().contains("Street Closure")) {
-                            String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-//                            String rTimestamp = "\"timeStamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
-                            String rOBSType = "\"observationType\":\"streetclosure\",";
-                            String rParams = "\"params\":{";
-                            String rpClosureAction = "\"closureAction\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
-                            String rpClosureType = "\"closureType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
-                            String rpLocation = "\"location\":{";
-                            String rplType = "\"type\":\"Feature\",";
-                            String rplGeometry = "\"geometry\":{";
-                            String rplgType = "\"type\":\"Circle\",";
-                            String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "],";
-                            String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
-                            String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
-                            String rplgeomEnd = "}";
-                            String rplocEnd = "}";
-                            String rparamsEnd = "},";
-                            String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpClosureAction + rpClosureType + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
-
-//                            result.name("result").value(resultString);
-
-                            /*result.name("observationType").value("streetClosure");
-
-                            result.name("params").beginObject();
-//                            result.name("closureAction").value(e.getRecords()[7].getStringValue());
-                            result.name("closureAction").value(e.getRecords()[0].getStringValue(7));
-                            result.name("closureType").value(e.getRecords()[0].getStringValue(6));
-
-                            result.name("location").beginObject();
-                            result.name("type").value("Feature");
-
-                            result.name("geometry").beginObject();
-                            result.name("type").value("Circle");  // Always Circle in App right now
-                            result.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue(2))
-                                    .value(e.getRecords()[0].getDoubleValue(3))
-                                    .endArray();
-                            result.name("radius").value(e.getRecords()[0].getDoubleValue(5));
-                            result.name("properties").beginObject();
-                            result.name("radius_units").value("ft");
-                            result.endObject().endObject().endObject().endObject();
-                            // End Params
-                            result.name("encodingType").value("application/vnd.geo+json");
-                            result.endObject();*/
-                    }else if(e.getSource().getName().contains("Aid")){
-                            String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
-                            String rOBSType = "\"observationType\":\"aid\",";
-                            String rParams = "\"params\":{";
-                            String rpAidType = "\"aidType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
-                            String rpAidPersons = "\"aidPersons\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
-                            String rpUrgency = "\"urgency\":\"" + e.getRecords()[0].getStringValue(8) + "\",";
-                            String rpDescription = "\"description\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
-                            String rpReporter = "\"reporter\":\"" + e.getRecords()[0].getStringValue(10) + "\",";
-                            String rpLocation = "\"location\":{";
-                            String rplType = "\"type\":\"Feature\",";
-                            String rplGeometry = "\"geometry\":{";
-                            String rplgType = "\"type\":\"Circle\",";
-                            String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "],";
-                            String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
-                            String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
-                            String rplgeomEnd = "}";
-                            String rplocEnd = "}";
-                            String rparamsEnd = "},";
-                            String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
-
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAidType + rpAidPersons + rpUrgency + rpDescription + rpReporter + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
-                            /*result.name("observationType").value("aid");
-
-                            result.name("params").beginObject();
-                            result.name("closureAction").value(e.getRecords()[0].getStringValue());
-                            result.name("closureType").value(e.getRecords()[0].getStringValue());
-
-                            result.name("location").beginObject();
-                            result.name("type").value("Feature");
-
-                            result.name("geometry").beginObject();
-                            result.name("type").value(e.getRecords()[0].getStringValue());
-                            result.name("coordinates").beginArray()
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .value(e.getRecords()[0].getDoubleValue())
-                                    .endArray();
-                            result.name("radius").value(e.getRecords()[0].getDoubleValue());
-                            result.name("properties").beginObject();
-                            result.name("radius_units").value("ft");
-                            result.endObject().endObject().endObject().endObject().endObject();
-                            // End Params
-                            result.name("encodingType").value("application/vnd.geo+json");*/
-                    }
-                        else if (e.getSource().getName().contains("Flooding")) {
+                        if (e.getSource().getName().contains("Flooding")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"flooding\",";
                             String rParams = "\"params\":{";
-                            String rpFeatureType = "\"featureType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
-                            String rpObsMode = "\"obsMode\":\"" + e.getRecords()[0].getStringValue(8) + "\",";
-                            String rpObsDepth = "\"obsDepth\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
-                            String rpObsTime = "\"obsTime\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
-                            String rpValidTime = "\"validTime\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
+                            String rpFeatureType = "\"featureType\":\"channel\",";
+                            String rpObsMode = "\"obsMode\":\"meter\",";
+                            String rpObsDepth = "\"obsDepth\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
+                            String rpObsTime = "\"obsTime\":\"" + timestamp + "\",";
+                            String rpValidTime = "\"validTime\":\"" + timestamp + "\",";
                             String rpLocation = "\"location\":{";
                             String rplType = "\"type\":\"Feature\",";
                             String rplGeometry = "\"geometry\":{";
                             String rplgType = "\"type\":\"Circle\",";
                             String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "],";
-                            String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
+                            String rplgRadius = "\"radius\":" + 0 + ",";
                             String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
                             String rplgeomEnd = "}";
                             String rplocEnd = "}";
@@ -569,53 +452,8 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 
                             resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpFeatureType + rpObsMode + rpObsDepth + rpObsTime + rpValidTime + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
 
-                    } else if (e.getSource().getName().contains("Medical")) {
-                            String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
-                            String rOBSType = "\"observationType\":\"med\",";
-                            String rParams = "\"params\":{";
-                            String rpMedType = "\"medType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
-                            String rpAction = "\"action\":\"" + "open" + "\",";
-                            String rpMedSign = "\"medSign\":\"" + "unknown" + "\",";
-                            String rpValue = "\"value\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
-                            String rpLocation = "\"location\":{";
-                            String rplType = "\"type\":\"Feature\",";
-                            String rplGeometry = "\"geometry\":{";
-                            String rplgType = "\"type\":\"Circle\",";
-                            String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "],";
-                            String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
-                            String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
-                            String rplgeomEnd = "}";
-                            String rplocEnd = "}";
-                            String rparamsEnd = "},";
-                            String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
+                        }
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpMedType + rpAction + rpMedSign + rpValue + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
-                    } else if (e.getSource().getName().contains("Tracking")) {
-                            String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
-                            String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
-                            String rOBSType = "\"observationType\":\"track\",";
-                            String rConfidence = "\"confidence\":\"" + e.getRecords()[0].getStringValue(5) + "\",";
-                            String rParams = "\"params\":{";
-                            String rpAssetId = "\"assetid\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
-                            String rpGPSTimestamp = "\"gpstimestamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
-                            String rpTrackMethod = "\"trackMethod\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
-                            String rpFeatureReference = "\"featureReference\":\"" + "Add A Room #/Description of Location" + "\",";
-                            String rpLocation = "\"location\":{";
-                            String rplType = "\"type\":\"Feature\",";
-                            String rplGeometry = "\"geometry\":{";
-                            String rplgType = "\"type\":\"Point\",";
-                            String rplgCoordinates = "\"coordinates\":[" + e.getRecords()[0].getDoubleValue(2) + "," + e.getRecords()[0].getDoubleValue(3) + "]";
-                            //String rplgRadius = "\"radius\":" + e.getRecords()[0].getDoubleValue(5) + ",";
-                            //String rplgProperties = "\"properties\":{\"radius_units\":\"ft\"}";
-                            String rplgeomEnd = "}";
-                            String rplocEnd = "}";
-                            String rparamsEnd = "},";
-                            String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
-
-                            resultString = "{" + rID + rTimestamp + rOBSType + rConfidence + rParams + rpAssetId + rpGPSTimestamp + rpTrackMethod + rpFeatureReference  + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
-                    }
-//                    String resultString = result.;
                     System.out.println(resultString);
                     jsonWriter.name("result").value(resultString);
                     jsonWriter.endObject();

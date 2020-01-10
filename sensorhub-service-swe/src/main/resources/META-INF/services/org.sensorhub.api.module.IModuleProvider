@@ -3,3 +3,4 @@ org.sensorhub.impl.service.sps.SPSServiceDescriptor
 org.sensorhub.impl.client.sost.SOSTClientDescriptor
 org.sensorhub.impl.sensor.swe.SWEVirtualSensorDescriptor
 org.sensorhub.impl.client.sta.STAClientDescriptor
+org.sensorhub.impl.client.staflood.STAClientDescriptor
