@@ -403,9 +403,12 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                                .name("@iot.id")
 //                                .value(streamInfo.datastreamID)
 //                                .endObject();
-                        System.out.println(streamInfo.datastreamID);
+//                        System.out.println(streamInfo.datastreamID);
                         // TODO: need to change DataStream and FOI based on type of Spot Report
-                        int dataStreamID, foiID;
+                        int dataStreamID = 233;
+                        int foiID = 33;
+                        System.out.println(e.getSource().getName());
+                        String obsName = e.getSource().getName();
                         if (e.getSource().getName().contains("Street Closure")) {
                             dataStreamID = 232;
                             foiID = 32;
@@ -416,15 +419,36 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             dataStreamID = 192;
                             foiID = 21;
                         }else if (e.getSource().getName().contains("Medical")) {
-                            dataStreamID = 233;
-                            foiID = 33;
-                        }if (e.getSource().getName().contains("Track")) {
-                            dataStreamID = 233;
-                            foiID = 33;
+                            dataStreamID = 237;
+                            foiID = 28;
+                        }else if (e.getSource().getName().contains("Track")) {
+                            dataStreamID = 236;
+                            foiID = 28;
                         }else{
                             dataStreamID = 233;
                             foiID = 33;
                         }
+                        
+//                        if (obsName.contains("Street Closure")) {
+//                            dataStreamID = 232;
+//                            foiID = 32;
+//                        } else if (obsName.contains("Aid")) {
+//                            dataStreamID = 235;
+//                            foiID = 28;
+//                        } else if (obsName.contains("Flooding")) {
+//                            dataStreamID = 192;
+//                            foiID = 21;
+//                        }else if (obsName.contains("Medical")) {
+//                            dataStreamID = 237;
+//                            foiID = 28;
+//                        }if (obs.contains("Track")) {
+//                            dataStreamID = 236;
+//                            foiID = 28;
+//                        }else{
+//                            dataStreamID = 233;
+//                            foiID = 33;
+//                        }
+                        System.out.println("DataStream: " + dataStreamID);
                         jsonWriter.name("Datastream").beginObject().name("@iot.id").value(dataStreamID).endObject();
                         jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(foiID).endObject();
 //                        jsonWriter.name("Datastream").beginObject().name("@iot.id").value(streamInfo.datastreamID).endObject();
@@ -459,7 +483,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"streetclosure\",";
                             String rParams = "\"params\":{";
-                            String rpClosureAction = "\"closureAction\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
+                            String rpAction = "\"action\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
                             String rpClosureType = "\"closureType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
                             String rpLocation = "\"location\":{";
                             String rplType = "\"type\":\"Feature\",";
@@ -473,7 +497,9 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpClosureAction + rpClosureType + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAction + rpClosureType
+                                    + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius
+                                    + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
 
 //                            result.name("result").value(resultString);
 
@@ -505,6 +531,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"aid\",";
                             String rParams = "\"params\":{";
+                            String rpAction = "\"action\":\"" + e.getRecords()[0].getStringValue(11) + "\",";
                             String rpAidType = "\"aidType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
                             String rpAidPersons = "\"aidPersons\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
                             String rpUrgency = "\"urgency\":\"" + e.getRecords()[0].getStringValue(8) + "\",";
@@ -522,7 +549,10 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAidType + rpAidPersons + rpUrgency + rpDescription + rpReporter + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAction + rpAidType
+                                    + rpAidPersons + rpUrgency + rpDescription + rpReporter + rpLocation + rplType
+                                    + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties
+                                    + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
                             /*result.name("observationType").value("aid");
 
                             result.name("params").beginObject();
@@ -550,6 +580,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"flooding\",";
                             String rParams = "\"params\":{";
+                            String rpAction = "\"action\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
                             String rpFeatureType = "\"featureType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
                             String rpObsMode = "\"obsMode\":\"" + e.getRecords()[0].getStringValue(8) + "\",";
                             String rpObsDepth = "\"obsDepth\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
@@ -567,7 +598,10 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpFeatureType + rpObsMode + rpObsDepth + rpObsTime + rpValidTime + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpAction + rpFeatureType
+                                    + rpObsMode + rpObsDepth + rpObsTime + rpValidTime + rpLocation + rplType
+                                    + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties
+                                    + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
 
                     } else if (e.getSource().getName().contains("Medical")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
@@ -575,7 +609,7 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rOBSType = "\"observationType\":\"med\",";
                             String rParams = "\"params\":{";
                             String rpMedType = "\"medType\":\"" + e.getRecords()[0].getStringValue(6) + "\",";
-                            String rpAction = "\"action\":\"" + "open" + "\",";
+                            String rpAction = "\"action\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
                             String rpMedSign = "\"medSign\":\"" + "unknown" + "\",";
                             String rpValue = "\"value\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
                             String rpLocation = "\"location\":{";
@@ -590,17 +624,22 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpMedType + rpAction + rpMedSign + rpValue + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpMedType + rpAction
+                                    + rpMedSign + rpValue + rpLocation + rplType + rplGeometry + rplgType
+                                    + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd
+                                    + rparamsEnd + rEncodingType + "}";
+
                     } else if (e.getSource().getName().contains("Tracking")) {
                             String rID = "\"id\":\"" + e.getRecords()[0].getStringValue(1) + "\",";
                             String rTimestamp = "\"timeStamp\":\"" + timestamp + "\",";
                             String rOBSType = "\"observationType\":\"track\",";
                             String rConfidence = "\"confidence\":\"" + e.getRecords()[0].getStringValue(5) + "\",";
                             String rParams = "\"params\":{";
+                            String rpAction = "\"action\":\"" + e.getRecords()[0].getStringValue(11) + "\",";
                             String rpAssetId = "\"assetid\":\"" + e.getRecords()[0].getStringValue(7) + "\",";
                             String rpGPSTimestamp = "\"gpstimestamp\":\"" + e.getRecords()[0].getStringValue(0) + "\",";
                             String rpTrackMethod = "\"trackMethod\":\"" + e.getRecords()[0].getStringValue(9) + "\",";
-                            String rpFeatureReference = "\"featureReference\":\"" + "Add A Room #/Description of Location" + "\",";
+                            String rpFeatureReference = "\"featureReference\":\"" + e.getRecords()[0].getStringValue(10) + "\",";
                             String rpLocation = "\"location\":{";
                             String rplType = "\"type\":\"Feature\",";
                             String rplGeometry = "\"geometry\":{";
@@ -613,7 +652,10 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rConfidence + rParams + rpAssetId + rpGPSTimestamp + rpTrackMethod + rpFeatureReference  + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rConfidence + rParams + rpAction
+                                    + rpAssetId + rpGPSTimestamp + rpTrackMethod + rpFeatureReference  + rpLocation
+                                    + rplType + rplGeometry + rplgType + rplgCoordinates + rplgeomEnd + rplocEnd
+                                    + rparamsEnd + rEncodingType + "}";
                     }
 //                    String resultString = result.;
                     System.out.println(resultString);

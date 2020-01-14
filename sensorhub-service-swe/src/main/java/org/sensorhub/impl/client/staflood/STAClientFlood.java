@@ -450,7 +450,10 @@ public class STAClientFlood extends AbstractModule<STAClientConfig> implements I
                             String rparamsEnd = "},";
                             String rEncodingType = "\"encodingType\":\"application/vnd.geo+json\"";
 
-                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpFeatureType + rpObsMode + rpObsDepth + rpObsTime + rpValidTime + rpLocation + rplType + rplGeometry + rplgType + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd + rEncodingType + "}";
+                            resultString = "{" + rID + rTimestamp + rOBSType + rParams + rpFeatureType + rpObsMode
+                            + rpObsDepth + rpObsTime + rpValidTime + rpLocation + rplType + rplGeometry + rplgType
+                            + rplgCoordinates + rplgRadius + rplgProperties + rplgeomEnd + rplocEnd + rparamsEnd
+                            + rEncodingType + "}";
 
                         }
 
