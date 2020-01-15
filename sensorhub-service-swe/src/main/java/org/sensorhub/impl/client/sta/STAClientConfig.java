@@ -76,7 +76,7 @@ public class STAClientConfig extends ClientConfig
         @DisplayInfo(label="Sensor ID", desc = "Numerical ID of the Sensor")
         public int sensorID = 0;
 
-        @DisplayInfo(label="DataStream ID", desc = "Numerical ID of the DataStream")
+        @DisplayInfo(label="Track DataStream ID", desc = "Numerical ID of the DataStream")
         public int dsID = 0;
 
         @DisplayInfo(label="FOI ID", desc = "Numerical ID of the Feature of Interest")

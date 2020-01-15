@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -422,8 +423,10 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
                             dataStreamID = 237;
                             foiID = 28;
                         }else if (e.getSource().getName().contains("Track")) {
-                            dataStreamID = 236;
+                            //dataStreamID = 236;
+                            dataStreamID = (int) streamInfo.datastreamID;
                             foiID = 28;
+                            //foiID = (int) streamInfo.foiID;
                         }else{
                             dataStreamID = 233;
                             foiID = 33;
@@ -455,7 +458,13 @@ public class STAClient extends AbstractModule<STAClientConfig> implements IClien
 //                        jsonWriter.name("FeatureOfInterest").beginObject().name("@iot.id").value(streamInfo.foiID).endObject();
 
                         // Get Time Record from event data
+                    
                         String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(e.getRecords()[0].getIntValue(0) * 1000L));
+                        SimpleDateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                        dateFmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        Date currDate = new Date(e.getRecords()[0].getIntValue(0) * 1000L);
+                        //Date currGMTDate = new Date(dateFmt.format(currDate));
+                        timestamp = dateFmt.format(currDate);
                         //jsonWriter.name("phenomenonTime").value(e.getRecords()[0].getStringValue(0));
 //                        jsonWriter.name("phenomenonTime").value("isodate");
                         jsonWriter.name("resultTime").value(timestamp);
